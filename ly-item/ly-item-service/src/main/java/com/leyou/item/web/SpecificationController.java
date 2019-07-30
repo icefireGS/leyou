@@ -28,4 +28,5 @@ public class SpecificationController {
         specificationService.saveSpecification(specification);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
 }

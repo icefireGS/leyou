@@ -105,4 +105,8 @@ public class BrandService {
             throw new LyException(ExceptionEnum.BRAND_DELETE_ERROR);
         }
     }
+
+    public List<Brand> queryBrandByCategory(Long cid) {
+        return this.brandMapper.queryByCategoryId(cid);
+    }
 }
