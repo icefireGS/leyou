@@ -35,4 +35,18 @@ public class BrandController {
         brandService.saveBrand(brand, cids);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
+    //修改品牌
+    @PutMapping
+    public ResponseEntity<Void> editBrand(Brand brand,@RequestParam("cids") List<Long> cids){
+        brandService.editBrand(brand, cids);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    //删除品牌
+    @DeleteMapping
+    public ResponseEntity<Void> deleteBrand(@RequestParam("id") Long id) {
+        brandService.deleteBrand(id);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
 }

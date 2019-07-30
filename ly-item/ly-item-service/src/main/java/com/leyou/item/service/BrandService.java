@@ -65,4 +65,44 @@ public class BrandService {
             }
         }
     }
+
+    //事务注解
+    @Transactional
+    public void editBrand(Brand brand, List<Long> cids) {
+        //修改品牌
+        int count = brandMapper.updateByPrimaryKey(brand);
+        if (count != 1) {
+            throw new LyException(ExceptionEnum.BRAND_EDIT_ERROR);
+        }
+        //修改中间表
+        //删除原中间关系
+        count = brandMapper.DeleteCategoryBrand(brand.getId());
+        if (count < 1) {
+            throw new LyException(ExceptionEnum.BRAND_EDIT_ERROR);
+        }
+        //重新插入中间关系
+        for (Long cid : cids) {
+            count = brandMapper.insertCategoryBrand(cid, brand.getId());
+            if (count != 1) {
+                throw new LyException(ExceptionEnum.BRAND_EDIT_ERROR);
+            }
+        }
+    }
+
+    //事务注解
+    @Transactional
+    public void deleteBrand(Long id) {
+        //删除品牌
+        Brand brand = new Brand();
+        brand.setId(id);
+        int count = brandMapper.deleteByPrimaryKey(brand);
+        if (count != 1) {
+            throw new LyException(ExceptionEnum.BRAND_DELETE_ERROR);
+        }
+        //删除品牌类别关联中间表
+        count = brandMapper.DeleteCategoryBrand(id);
+        if (count < 1) {
+            throw new LyException(ExceptionEnum.BRAND_DELETE_ERROR);
+        }
+    }
 }
