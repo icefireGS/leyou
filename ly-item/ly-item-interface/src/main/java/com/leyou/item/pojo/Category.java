@@ -1,6 +1,5 @@
 package com.leyou.item.pojo;
 
-import com.sun.javafx.beans.IDProperty;
 import lombok.Data;
 import tk.mybatis.mapper.annotation.KeySql;
 

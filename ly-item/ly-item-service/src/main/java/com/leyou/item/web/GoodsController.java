@@ -1,14 +1,19 @@
 package com.leyou.item.web;
 
 import com.leyou.common.vo.PageResult;
-import com.leyou.item.pojo.SpuBo;
+import com.leyou.item.pojo.Sku;
+import com.leyou.item.bo.SpuBo;
+import com.leyou.item.pojo.SpuDetail;
 import com.leyou.item.service.GoodsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
+@RequestMapping("goods")
 public class GoodsController {
 
     @Autowired
@@ -38,10 +43,11 @@ public class GoodsController {
 
     /**
      * 新增商品
+     *
      * @param spu
      * @return
      */
-    @PostMapping("goods")
+    @PostMapping
     public ResponseEntity<Void> saveGoods(@RequestBody SpuBo spu) {
         try {
             this.goodsService.save(spu);
@@ -52,9 +58,38 @@ public class GoodsController {
         }
     }
 
-    @DeleteMapping("goods")
+    @DeleteMapping
     public ResponseEntity<Void> deleteGoods(@RequestParam("id") Long spu_id) {
         goodsService.deleteGoods(spu_id);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
+    @GetMapping("/spu/detail/{id}")
+    public ResponseEntity<SpuDetail> getSpuDetailById(@PathVariable("id") Long spu_id) {
+        return ResponseEntity.ok(goodsService.getSpuDetailById(spu_id));
+    }
+
+    @GetMapping("/sku/list")
+    public ResponseEntity<List<Sku>> getSkusBySpuId(@RequestParam("id") Long spu_id) {
+        return ResponseEntity.ok(goodsService.getSkusBySpuId(spu_id));
+    }
+
+    @PutMapping
+    public ResponseEntity<Void> editGoods(@RequestBody SpuBo spu) {
+        goodsService.edit(spu);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @GetMapping("/spu/soldout")
+    public ResponseEntity<Void> soldoutGoods(@RequestParam("id") Long spu_id) {
+        goodsService.soldoutGoods(spu_id);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @GetMapping("/spu/shelves")
+    public ResponseEntity<Void> shelvesGoods(@RequestParam("id") Long spu_id) {
+        goodsService.shelvesGoods(spu_id);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
 }

@@ -5,6 +5,7 @@ import com.github.pagehelper.PageHelper;
 import com.leyou.common.enums.ExceptionEnum;
 import com.leyou.common.exception.LyException;
 import com.leyou.common.vo.PageResult;
+import com.leyou.item.bo.SpuBo;
 import com.leyou.item.mapper.*;
 import com.leyou.item.pojo.*;
 import org.apache.commons.lang3.StringUtils;
@@ -12,6 +13,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import tk.mybatis.mapper.entity.Example;
 
 import java.util.Arrays;
@@ -90,8 +92,7 @@ public class GoodsService {
         spu.getSpuDetail().setSpuId(spu.getId());
         this.spuDetailMapper.insert(spu.getSpuDetail());
 
-        // 保存sku和库存信息
-        saveSkuAndStock(spu.getSkus(), spu.getId());
+        saveSkuAndStock(spu.getSkus(),spu.getId());
     }
 
     private void saveSkuAndStock(List<Sku> skus, Long spuId) {
@@ -101,7 +102,7 @@ public class GoodsService {
             }
             // 保存sku
             sku.setSpuId(spuId);
-            // 默认不参与任何促销
+            // 初始化时间
             sku.setCreateTime(new Date());
             sku.setLastUpdateTime(sku.getCreateTime());
             this.skuMapper.insert(sku);
@@ -156,4 +157,88 @@ public class GoodsService {
 
 
     }
+
+    public SpuDetail getSpuDetailById(Long spu_id) {
+        SpuDetail querySD = new SpuDetail();
+        querySD.setSpuId(spu_id);
+        SpuDetail result = spuDetailMapper.selectByPrimaryKey(querySD);
+        if (result == null) {
+            throw new LyException(ExceptionEnum.SPUDETAIL_NOT_FOUND);
+        }
+        return result;
+    }
+
+    public List<Sku> getSkusBySpuId(Long spu_id) {
+        Example example = new Example(Sku.class);
+        example.createCriteria().andEqualTo("spuId", spu_id);
+        List<Sku> skus = skuMapper.selectByExample(example);
+        if (CollectionUtils.isEmpty(skus)) {
+            throw new LyException(ExceptionEnum.SKU_NOT_FOUND);
+        }
+        for (Sku sku : skus) {
+            Stock Sexample = new Stock();
+            Sexample.setSkuId(sku.getId());
+            Stock stock = stockMapper.selectByPrimaryKey(Sexample);
+            if (stock == null) {
+                throw new LyException(ExceptionEnum.STOCK_NOT_FOUND);
+            }
+            sku.setStock(stock);
+        }
+        return skus;
+    }
+
+    @Transactional
+    public void edit(SpuBo spu){
+        // 查询以前sku
+        List<Sku> skus = this.getSkusBySpuId(spu.getId());
+        // 如果以前存在，则删除
+        if(!CollectionUtils.isEmpty(skus)) {
+            List<Long> ids = skus.stream().map(s -> s.getId()).collect(Collectors.toList());
+            // 删除以前库存
+            Example example = new Example(Stock.class);
+            example.createCriteria().andIn("skuId", ids);
+            this.stockMapper.deleteByExample(example);
+
+            // 删除以前的sku
+            Sku record = new Sku();
+            record.setSpuId(spu.getId());
+            this.skuMapper.delete(record);
+
+        }
+        // 新增sku和库存
+        saveSkuAndStock(spu.getSkus(), spu.getId());
+
+        // 更新spu
+        spu.setLastUpdateTime(new Date());
+        spu.setCreateTime(null);
+        spu.setValid(null);
+        spu.setSaleable(null);
+        this.spuMapper.updateByPrimaryKeySelective(spu);
+
+        // 更新spu详情
+        this.spuDetailMapper.updateByPrimaryKeySelective(spu.getSpuDetail());
+    }
+
+    public void soldoutGoods(Long spu_id) {
+        Spu spu = new Spu();
+        spu.setId(spu_id);
+        spu.setSaleable(false);
+        int count = spuMapper.updateByPrimaryKeySelective(spu);
+        if (count < 1) {
+            throw new LyException(ExceptionEnum.SALEABLE_CHANGE_ERROR);
+        }
+    }
+
+    public void shelvesGoods(Long spu_id) {
+        Spu spu = new Spu();
+        spu.setId(spu_id);
+        spu.setSaleable(true);
+        int count = spuMapper.updateByPrimaryKeySelective(spu);
+        if (count < 1) {
+            throw new LyException(ExceptionEnum.SALEABLE_CHANGE_ERROR);
+        }
+    }
+
+
+
 }
