@@ -60,4 +60,27 @@ public class SpecificationService {
         });
         return specGroups;
     }
+
+    public void addSpec(SpecGroup specGroup) {
+        int count = specGroupMapper.insertSelective(specGroup);
+        if (count < 1) {
+            throw new LyException(ExceptionEnum.SPECIFICATION_ADD_EEEOR);
+        }
+    }
+
+    public void editSpec(SpecGroup specGroup) {
+        int count = specGroupMapper.updateByPrimaryKey(specGroup);
+        if (count < 1) {
+            throw new LyException(ExceptionEnum.SPECIFICATION_EDIT_EEEOR);
+        }
+    }
+
+    public void deleteSpec(Long id) {
+        SpecGroup specGroup = new SpecGroup();
+        specGroup.setId(id);
+        int count = specGroupMapper.deleteByPrimaryKey(specGroup);
+        if (count < 1) {
+            throw new LyException(ExceptionEnum.SPECIFICATION_DELETE_EEEOR);
+        }
+    }
 }

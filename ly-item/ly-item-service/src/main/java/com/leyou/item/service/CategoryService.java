@@ -35,4 +35,20 @@ public class CategoryService {
         return this.categoryMapper.selectByIdList(ids).stream().map(Category::getName).collect(Collectors.toList());
     }
 
+    public void addCategory(Category category) {
+        category.setId(null);
+        int count = categoryMapper.insertSelective(category);
+        if (count < 1) {
+            throw new LyException(ExceptionEnum.CATEGORY_ADD_EOORO);
+        }
+    }
+
+    public void deleteCategory(Long cid) {
+        Category category=new Category();
+        category.setId(cid);
+        int count = categoryMapper.deleteByPrimaryKey(category);
+        if (count < 1) {
+            throw new LyException(ExceptionEnum.CATEGORY_DELETE_EORROR);
+        }
+    }
 }

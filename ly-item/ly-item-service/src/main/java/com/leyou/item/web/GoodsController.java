@@ -1,8 +1,9 @@
 package com.leyou.item.web;
 
 import com.leyou.common.vo.PageResult;
-import com.leyou.item.pojo.Sku;
 import com.leyou.item.bo.SpuBo;
+import com.leyou.item.pojo.Sku;
+import com.leyou.item.pojo.Spu;
 import com.leyou.item.pojo.SpuDetail;
 import com.leyou.item.service.GoodsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,8 +59,8 @@ public class GoodsController {
         }
     }
 
-    @DeleteMapping
-    public ResponseEntity<Void> deleteGoods(@RequestParam("id") Long spu_id) {
+    @DeleteMapping("/spu/{id}")
+    public ResponseEntity<Void> deleteGoods(@PathVariable("id") Long spu_id) {
         goodsService.deleteGoods(spu_id);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
@@ -80,16 +81,25 @@ public class GoodsController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @GetMapping("/spu/soldout")
-    public ResponseEntity<Void> soldoutGoods(@RequestParam("id") Long spu_id) {
+    @PutMapping("/spu/out/{id}")
+    public ResponseEntity<Void> soldoutGoods(@PathVariable("id") Long spu_id) {
         goodsService.soldoutGoods(spu_id);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    @GetMapping("/spu/shelves")
-    public ResponseEntity<Void> shelvesGoods(@RequestParam("id") Long spu_id) {
+    @PutMapping("/spu/shelves/{id}")
+    public ResponseEntity<Void> shelvesGoods(@PathVariable("id") Long spu_id) {
         goodsService.shelvesGoods(spu_id);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @GetMapping("spu/{id}")
+    public ResponseEntity<Spu> querySpuById(@PathVariable("id") Long id){
+        Spu spu = this.goodsService.querySpuById(id);
+        if(spu == null){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return ResponseEntity.ok(spu);
     }
 
 }

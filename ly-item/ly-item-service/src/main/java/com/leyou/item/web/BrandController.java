@@ -44,9 +44,9 @@ public class BrandController {
     }
 
     //删除品牌
-    @DeleteMapping
-    public ResponseEntity<Void> deleteBrand(@RequestParam("id") Long id) {
-        brandService.deleteBrand(id);
+    @DeleteMapping("bid/{bid}")
+    public ResponseEntity<Void> deleteBrand(@PathVariable("bid") Long bid) {
+        brandService.deleteBrand(bid);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -63,4 +63,19 @@ public class BrandController {
         }
         return ResponseEntity.ok(list);
     }
+
+    /**
+     * 根据多个id查询品牌
+     * @param ids
+     * @return
+     */
+    @GetMapping("list")
+    public ResponseEntity<List<Brand>> queryBrandByIds(@RequestParam("ids") List<Long> ids){
+        List<Brand> list = this.brandService.queryBrandByIds(ids);
+        if(list == null){
+            new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return ResponseEntity.ok(list);
+    }
+
 }

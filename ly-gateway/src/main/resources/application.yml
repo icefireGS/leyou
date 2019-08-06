@@ -9,13 +9,18 @@ eureka:
       defaultZone: http://127.0.0.1:10086/eureka
 zuul:
   prefix: /api # 添加路由前缀
+  retryable: true
   routes:
     item-service: /item/**
     search-service: /search/**
+    user-service: /user/**
+    auth-service: /auth/**
     upload-service:
       path: /upload/**
       serviceID: upload-service
       strip-prefix: false
+  add-host-header: true   # 携带请求本身的host头信息
+  sensitive-headers:    # 禁止使用的头信息，设置为null，否则set-cookie失效
 ribbon:
   ConnectTimeout: 1000 # 连接超时时间(ms)
   ReadTimeout: 3500 # 通信超时时间(ms)
@@ -28,3 +33,15 @@ hystrix:
         isolation:
           thread:
             timeoutInMillisecond: 5000 # 熔断超时时长：5000ms
+ly:
+  jwt:
+    pubKeyPath: E:/leyou/rsa/rsa.pub # 公钥地址
+    cookieName: LY_TOKEN # cookie的名称
+  filter:
+    allowPaths:
+      - /api/auth
+      - /api/search
+      - /api/user/register
+      - /api/user/check
+      - /api/user/code
+      - /api/item

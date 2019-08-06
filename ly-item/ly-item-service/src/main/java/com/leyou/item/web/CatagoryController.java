@@ -49,4 +49,26 @@ public class CatagoryController {
         return ResponseEntity.ok(list);
     }
 
+    @PostMapping
+    public ResponseEntity<Void> addCatagory(
+            @RequestParam("name") String name,
+            @RequestParam("parentId") Long parentId,
+            @RequestParam("isParent") Boolean isParent,
+            @RequestParam("sort") Integer sort
+    ) {
+        Category category = new Category();
+        category.setName(name);
+        category.setParentId(parentId);
+        category.setIsParent(isParent);
+        category.setSort(sort);
+        categoryService.addCategory(category);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @DeleteMapping("cid/{cid}")
+    public ResponseEntity<Void> deleteCatagory(@PathVariable("cid") Long cid) {
+        categoryService.deleteCategory(cid);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
 }

@@ -61,7 +61,7 @@ public class SpecificationController {
         return ResponseEntity.ok(specParamList);
     }
 
-    @GetMapping("{cid}")
+    @GetMapping("/list/{cid}")
     public ResponseEntity<List<SpecGroup>> querySpecsByCid(@PathVariable("cid") Long cid){
         List<SpecGroup> list = this.specificationService.querySpecsByCid(cid);
         if(list == null || list.size() == 0){
@@ -70,4 +70,35 @@ public class SpecificationController {
         return ResponseEntity.ok(list);
     }
 
+    @PostMapping("group")
+    public ResponseEntity<Void> addSpec(
+            @RequestParam("cid") Long cid,
+            @RequestParam("name") String name
+    ){
+        SpecGroup specGroup = new SpecGroup();
+        specGroup.setCid(cid);
+        specGroup.setName(name);
+        specificationService.addSpec(specGroup);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PutMapping("group")
+    public ResponseEntity<Void> editSpec(
+            @RequestParam("id") Long id,
+            @RequestParam("cid") Long cid,
+            @RequestParam("name") String name
+    ){
+        SpecGroup specGroup = new SpecGroup();
+        specGroup.setId(id);
+        specGroup.setCid(cid);
+        specGroup.setName(name);
+        specificationService.editSpec(specGroup);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @DeleteMapping("group/{id}")
+    public ResponseEntity<Void> deleteSpec(@PathVariable("id") Long id) {
+        specificationService.deleteSpec(id);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
 }

@@ -9,6 +9,9 @@ import com.leyou.item.bo.SpuBo;
 import com.leyou.item.mapper.*;
 import com.leyou.item.pojo.*;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,6 +44,11 @@ public class GoodsService {
 
     @Autowired
     private StockMapper stockMapper;
+
+    @Autowired
+    private AmqpTemplate amqpTemplate;
+
+    private Logger logger = LoggerFactory.getLogger(GoodsService.class);
 
     public PageResult<SpuBo> querySpuByPageAndSort(Integer page, Integer rows, Boolean saleable, String key) {
         // 1、查询SPU
@@ -93,6 +101,9 @@ public class GoodsService {
         this.spuDetailMapper.insert(spu.getSpuDetail());
 
         saveSkuAndStock(spu.getSkus(),spu.getId());
+
+        //发送消息
+        sendMessage(spu.getId(),"insert");
     }
 
     private void saveSkuAndStock(List<Sku> skus, Long spuId) {
@@ -105,13 +116,19 @@ public class GoodsService {
             // 初始化时间
             sku.setCreateTime(new Date());
             sku.setLastUpdateTime(sku.getCreateTime());
-            this.skuMapper.insert(sku);
+            int count = this.skuMapper.insert(sku);
+            if (count < 1) {
+                throw new LyException(ExceptionEnum.GOOD_SAVE_ERROR);
+            }
 
             // 保存库存信息
             Stock stock = new Stock();
             stock.setSkuId(sku.getId());
-            stock.setStock(sku.getStock().getStock());
-            this.stockMapper.insert(stock);
+            stock.setStock(sku.getStock());
+            count = this.stockMapper.insert(stock);
+            if (count < 1) {
+                throw new LyException(ExceptionEnum.GOOD_SAVE_ERROR);
+            }
         }
     }
 
@@ -143,19 +160,14 @@ public class GoodsService {
         for (Sku sku : skus) {
             //逐个删除
             stock.setSkuId(sku.getId());
-            count = stockMapper.deleteByPrimaryKey(stock);
-            if (count < 1) {
-                throw new LyException(ExceptionEnum.GOOD_DELETE_ERROR);
-            }
+            stockMapper.deleteByPrimaryKey(stock);
         }
 
         //删除sku
-        count = skuMapper.deleteByExample(example);
-        if (count < 1) {
-            throw new LyException(ExceptionEnum.GOOD_DELETE_ERROR);
-        }
+        skuMapper.deleteByExample(example);
 
-
+        //发送消息
+        sendMessage(id,"delete");
     }
 
     public SpuDetail getSpuDetailById(Long spu_id) {
@@ -182,7 +194,7 @@ public class GoodsService {
             if (stock == null) {
                 throw new LyException(ExceptionEnum.STOCK_NOT_FOUND);
             }
-            sku.setStock(stock);
+            sku.setStock(stock.getStock());
         }
         return skus;
     }
@@ -217,6 +229,9 @@ public class GoodsService {
 
         // 更新spu详情
         this.spuDetailMapper.updateByPrimaryKeySelective(spu.getSpuDetail());
+
+        //发送消息
+        sendMessage(spu.getId(),"update");
     }
 
     public void soldoutGoods(Long spu_id) {
@@ -239,6 +254,17 @@ public class GoodsService {
         }
     }
 
+    public Spu querySpuById(Long id) {
+        return this.spuMapper.selectByPrimaryKey(id);
+    }
 
+    private void sendMessage(Long id, String type){
+        // 发送消息
+        try {
+            this.amqpTemplate.convertAndSend("item." + type, id);
+        } catch (Exception e) {
+            logger.error("{}商品消息发送异常，商品id：{}", type, id, e);
+        }
+    }
 
 }

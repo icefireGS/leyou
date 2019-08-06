@@ -21,5 +21,5 @@ public class Sku {
     private Date createTime;// 创建时间
     private Date lastUpdateTime;// 最后修改时间
     @Transient
-    private Stock stock;// 库存
+    private Integer stock;// 库存
 }
